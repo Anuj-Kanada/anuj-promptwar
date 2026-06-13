@@ -1,0 +1,1 @@
+# MindEase Django Project

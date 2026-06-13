@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MindEase — AI-powered mental wellness tracker for exam students. Monitor stress, journal your feelings, and get personalized AI support.">
+    <title>{% block title %}MindEase{% endblock %} — Mental Wellness Tracker</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu" id="mobile-menu-toggle">☰</button>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+            <a href="{% url 'journal:dashboard' %}" class="sidebar-brand">
+                <div class="brand-icon">🧠</div>
+                <span class="brand-text">MindEase</span>
+            </a>
+
+            <div class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="{% url 'journal:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'journal:new_entry' %}" class="nav-link {% if request.resolver_match.url_name == 'new_entry' %}active{% endif %}" id="nav-journal">
+                    <span class="nav-icon">📝</span>
+                    <span>New Journal</span>
+                </a>
+                <a href="{% url 'journal:history' %}" class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" id="nav-history">
+                    <span class="nav-icon">📚</span>
+                    <span>Journal History</span>
+                </a>
+
+                <div class="nav-section-title">AI & Wellness</div>
+                <a href="{% url 'chat:chat' %}" class="nav-link {% if request.resolver_match.url_name == 'chat' %}active{% endif %}" id="nav-chat">
+                    <span class="nav-icon">💬</span>
+                    <span>AI Buddy</span>
+                    <span class="pulse-dot" style="margin-left: auto;"></span>
+                </a>
+                <a href="{% url 'wellness:exercises' %}" class="nav-link {% if request.resolver_match.url_name == 'exercises' %}active{% endif %}" id="nav-exercises">
+                    <span class="nav-icon">🧘</span>
+                    <span>Exercises</span>
+                </a>
+                <a href="{% url 'wellness:resources' %}" class="nav-link {% if request.resolver_match.url_name == 'resources' %}active{% endif %}" id="nav-resources">
+                    <span class="nav-icon">📋</span>
+                    <span>Resources</span>
+                </a>
+
+                <div class="nav-section-title">Insights</div>
+                <a href="{% url 'analytics:trends' %}" class="nav-link {% if request.resolver_match.url_name == 'trends' %}active{% endif %}" id="nav-trends">
+                    <span class="nav-icon">📈</span>
+                    <span>Trends</span>
+                </a>
+                <a href="{% url 'wellness:alerts' %}" class="nav-link {% if request.resolver_match.url_name == 'alerts' %}active{% endif %}" id="nav-alerts">
+                    <span class="nav-icon">🔔</span>
+                    <span>Alerts</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar">{{ user.profile.avatar_emoji }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.first_name|default:user.username }}</div>
+                        <div class="user-exam">{{ user.profile.get_exam_type_display }}</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap: 4px; margin-top: var(--space-sm);">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-ghost btn-sm" style="flex:1;" id="nav-profile">⚙️ Profile</a>
+                    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" id="theme-toggle"></button>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-ghost btn-sm" id="nav-logout">🚪</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" role="main">
+            {% if messages %}
+            <div class="toast-container" id="toast-container">
+                {% for message in messages %}
+                <div class="toast alert-{{ message.tags }}" role="alert">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+    <!-- Unauthenticated Layout -->
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('mindease-theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('mindease-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // Sidebar Toggle (mobile)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Auto-dismiss toasts
+        document.querySelectorAll('.toast').forEach(toast => {
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        });
+
+        // CSRF Token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

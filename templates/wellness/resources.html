@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Resources{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">📋 Wellness Resources</h1>
+    <p class="page-subtitle">Helpful resources for your mental wellness journey</p>
+
+    <!-- Crisis Helplines -->
+    <div class="glass-card" style="margin-bottom: var(--space-xl); border-left: 4px solid var(--accent-danger);">
+        <h2 class="section-title">🆘 Crisis Helplines (India)</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg); font-size: 0.9rem;">
+            If you or someone you know is in crisis, please reach out. You're not alone. 💙
+        </p>
+        <div class="grid-2">
+            {% for helpline in resources.crisis_helplines %}
+            <div class="stat-card" style="cursor: default; border-left: 3px solid var(--accent-danger);">
+                <div style="font-weight: 700; font-size: 1rem; margin-bottom: var(--space-xs);">{{ helpline.name }}</div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--accent-primary-light); margin-bottom: var(--space-xs);">
+                    📞 {{ helpline.number }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-tertiary);">{{ helpline.desc }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Study Techniques -->
+    <div class="glass-card" style="margin-bottom: var(--space-xl);">
+        <h2 class="section-title">📚 Proven Study Techniques</h2>
+        <div class="grid-2">
+            {% for technique in resources.study_techniques %}
+            <div class="entry-card" style="cursor: default;">
+                <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+                    <span style="font-size: 2rem;">{{ technique.emoji }}</span>
+                    <div>
+                        <h3 style="font-weight: 700;">{{ technique.name }}</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">{{ technique.desc }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Wellness Tips -->
+    <div class="glass-card">
+        <h2 class="section-title">💡 Daily Wellness Tips</h2>
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <div class="glass-card-gradient" style="padding: var(--space-lg);">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">💤</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Sleep Hygiene</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Aim for 7-8 hours. No screens 30 min before bed. Keep a consistent schedule even during exam prep.</p>
+            </div>
+            <div class="glass-card-gradient" style="padding: var(--space-lg);">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">🥗</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Brain Food</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Eat nuts, berries, dark chocolate, and stay hydrated. Your brain needs fuel to perform at its best!</p>
+            </div>
+            <div class="glass-card-gradient" style="padding: var(--space-lg);">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">🏃</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Move Daily</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Even 15 minutes of exercise releases endorphins and improves memory retention.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}Trends{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">📈 Wellness Trends</h1>
+    <p class="page-subtitle">Visual insights into your mental wellness patterns</p>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card purple">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value">{{ stats.avg_mood }}</div>
+            <div class="stat-label">Avg Mood</div>
+        </div>
+        <div class="stat-card cyan">
+            <div class="stat-icon">😰</div>
+            <div class="stat-value">{{ stats.avg_anxiety }}</div>
+            <div class="stat-label">Avg Anxiety</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">{{ stats.total_entries }}</div>
+            <div class="stat-label">Entries</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value">{{ stats.total_moods }}</div>
+            <div class="stat-label">Mood Logs</div>
+        </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div style="display: flex; gap: var(--space-sm); margin-bottom: var(--space-xl);">
+        <a href="?days=7" class="btn {% if days == 7 %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">7 Days</a>
+        <a href="?days=14" class="btn {% if days == 14 %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">14 Days</a>
+        <a href="?days=30" class="btn {% if days == 30 %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">30 Days</a>
+        <a href="?days=90" class="btn {% if days == 90 %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">90 Days</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Mood Trend Chart -->
+        <div class="glass-card">
+            <h2 class="section-title">📊 Mood & Anxiety Trends</h2>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Emotion Distribution -->
+        <div class="glass-card">
+            <h2 class="section-title">🎭 Emotion Distribution</h2>
+            <div class="chart-container">
+                <canvas id="emotionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: var(--space-xl);">
+        <!-- Burnout Risk Timeline -->
+        <div class="glass-card">
+            <h2 class="section-title">🔥 Burnout Risk Timeline</h2>
+            <div class="chart-container">
+                <canvas id="burnoutChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Stress Triggers -->
+        <div class="glass-card">
+            <h2 class="section-title">⚠️ Top Stress Triggers</h2>
+            <div class="chart-container">
+                <canvas id="triggerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const moodData = {{ mood_data|safe }};
+    const emotionCounts = {{ emotion_counts|safe }};
+    const triggerData = {{ trigger_data|safe }};
+    const burnoutData = {{ burnout_data|safe }};
+
+    const chartColors = {
+        purple: 'rgba(124, 58, 237, 0.8)',
+        cyan: 'rgba(6, 182, 212, 0.8)',
+        green: 'rgba(16, 185, 129, 0.8)',
+        orange: 'rgba(245, 158, 11, 0.8)',
+        red: 'rgba(239, 68, 68, 0.8)',
+        pink: 'rgba(236, 72, 153, 0.8)',
+        blue: 'rgba(59, 130, 246, 0.8)',
+    };
+
+    const chartDefaults = {
+        plugins: {
+            legend: {
+                labels: { color: '#94a3b8', font: { family: 'Inter' } }
+            }
+        },
+        scales: {
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: '#64748b' },
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#64748b' },
+            }
+        }
+    };
+
+    // Mood & Anxiety Trend
+    if (moodData.dates && moodData.dates.length > 0) {
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: moodData.dates,
+                datasets: [
+                    {
+                        label: 'Mood',
+                        data: moodData.moods,
+                        borderColor: chartColors.purple,
+                        backgroundColor: 'rgba(124,58,237,0.1)',
+                        fill: true, tension: 0.4, borderWidth: 2,
+                    },
+                    {
+                        label: 'Anxiety',
+                        data: moodData.anxiety,
+                        borderColor: chartColors.red,
+                        backgroundColor: 'rgba(239,68,68,0.1)',
+                        fill: true, tension: 0.4, borderWidth: 2,
+                    },
+                    {
+                        label: 'Energy',
+                        data: moodData.energy,
+                        borderColor: chartColors.green,
+                        backgroundColor: 'rgba(16,185,129,0.1)',
+                        fill: false, tension: 0.4, borderWidth: 2,
+                    },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, ...chartDefaults }
+        });
+    }
+
+    // Emotion Distribution (Doughnut)
+    const emotionLabels = Object.keys(emotionCounts);
+    const emotionValues = Object.values(emotionCounts);
+    if (emotionLabels.length > 0) {
+        new Chart(document.getElementById('emotionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: emotionLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                datasets: [{
+                    data: emotionValues,
+                    backgroundColor: [
+                        chartColors.purple, chartColors.cyan, chartColors.green,
+                        chartColors.orange, chartColors.red, chartColors.pink,
+                        chartColors.blue,
+                    ],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 15 } }
+                },
+                cutout: '60%',
+            }
+        });
+    }
+
+    // Burnout Risk Timeline
+    if (burnoutData.dates && burnoutData.dates.length > 0) {
+        new Chart(document.getElementById('burnoutChart'), {
+            type: 'bar',
+            data: {
+                labels: burnoutData.dates,
+                datasets: [{
+                    label: 'Burnout Risk %',
+                    data: burnoutData.scores,
+                    backgroundColor: burnoutData.scores.map(s =>
+                        s < 30 ? chartColors.green : s < 60 ? chartColors.orange : chartColors.red
+                    ),
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...chartDefaults,
+                scales: {
+                    ...chartDefaults.scales,
+                    y: { ...chartDefaults.scales.y, min: 0, max: 100 }
+                }
+            }
+        });
+    }
+
+    // Stress Triggers (Horizontal Bar)
+    if (triggerData.labels && triggerData.labels.length > 0) {
+        new Chart(document.getElementById('triggerChart'), {
+            type: 'bar',
+            data: {
+                labels: triggerData.labels,
+                datasets: [{
+                    label: 'Occurrences',
+                    data: triggerData.counts,
+                    backgroundColor: chartColors.purple,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                ...chartDefaults,
+            }
+        });
+    }
+</script>
+{% endblock %}

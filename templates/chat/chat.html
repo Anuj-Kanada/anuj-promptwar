@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}AI Buddy{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="chat-buddy-info">
+            <div class="buddy-avatar">🤖</div>
+            <div>
+                <div class="buddy-name">MindEase Buddy</div>
+                <div class="buddy-status">
+                    <span class="pulse-dot"></span>
+                    Always here for you
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: var(--space-sm);">
+            <button class="btn btn-ghost btn-sm" onclick="startNewSession()" id="btn-new-chat">🔄 New Chat</button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+        {% for msg in messages %}
+        <div class="message {{ msg.role }}">
+            <div class="message-avatar">
+                {% if msg.role == 'assistant' %}🤖{% else %}{{ user.profile.avatar_emoji }}{% endif %}
+            </div>
+            <div>
+                <div class="message-bubble">{{ msg.content|linebreaksbr }}</div>
+                <div class="message-time">{{ msg.sent_at|date:"h:i A" }}</div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typing-indicator">
+            <div class="message-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:0.9rem;">🤖</div>
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span>MindEase Buddy is thinking...</span>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="sendQuickAction('breathing')" id="qa-breathing">🌬️ Breathing</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('motivation')" id="qa-motivation">💪 Motivation</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('study_tip')" id="qa-study">📚 Study Tip</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('grounding')" id="qa-grounding">🌍 Grounding</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('break_ideas')" id="qa-break">☕ Break Ideas</button>
+        </div>
+
+        <div class="chat-input-row">
+            <textarea class="chat-input" id="chat-input" placeholder="Type your message..." rows="1"
+                      aria-label="Chat message input"></textarea>
+            <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()" aria-label="Send message">
+                ➤
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send-btn');
+    const typingIndicator = document.getElementById('typing-indicator');
+    let isSending = false;
+
+    // Scroll to bottom
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    scrollToBottom();
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Enter to send (Shift+Enter for new line)
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Add message to UI
+    function addMessage(content, role) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role}`;
+
+        const avatar = role === 'assistant' ? '🤖' : '{{ user.profile.avatar_emoji }}';
+        const time = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+
+        // Format content: convert markdown-like bold and line breaks
+        let formattedContent = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>')
+            .replace(/• /g, '• ');
+
+        msgDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div>
+                <div class="message-bubble">${formattedContent}</div>
+                <div class="message-time">${time}</div>
+            </div>
+        `;
+
+        // Insert before typing indicator
+        chatMessages.insertBefore(msgDiv, typingIndicator);
+        scrollToBottom();
+    }
+
+    // Send message
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || isSending) return;
+
+        isSending = true;
+        sendBtn.disabled = true;
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+
+        // Add user message
+        addMessage(message, 'user');
+
+        // Show typing indicator
+        typingIndicator.classList.add('active');
+        scrollToBottom();
+
+        try {
+            const response = await fetch('{% url "chat:send_message" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            typingIndicator.classList.remove('active');
+
+            if (data.success || data.response) {
+                addMessage(data.response, 'assistant');
+            } else {
+                addMessage('Sorry, I had trouble responding. Please try again! 💙', 'assistant');
+            }
+        } catch (err) {
+            typingIndicator.classList.remove('active');
+            addMessage('Connection error. Please check your internet and try again. 🔄', 'assistant');
+        }
+
+        isSending = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+
+    // Quick actions
+    function sendQuickAction(action) {
+        const messages = {
+            'breathing': "I need a breathing exercise to calm down 🌬️",
+            'motivation': "I need some motivation right now 💪",
+            'study_tip': "Can you share a study tip? 📚",
+            'grounding': "I'm feeling anxious, help me ground myself 🌍",
+            'break_ideas': "What should I do for a study break? ☕",
+        };
+
+        chatInput.value = messages[action] || '';
+        sendMessage();
+    }
+
+    // New session
+    async function startNewSession() {
+        try {
+            const response = await fetch('{% url "chat:new_session" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error('Failed to start new session');
+        }
+    }
+</script>
+{% endblock %}

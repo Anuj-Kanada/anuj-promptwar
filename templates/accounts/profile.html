@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">Your Profile</h1>
+    <p class="page-subtitle">Manage your exam details and preferences</p>
+
+    <div class="grid-2">
+        <div class="glass-card">
+            <h2 class="section-title">📋 Profile Settings</h2>
+            <form method="post" action="{% url 'accounts:profile' %}">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-help">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="form-error">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary" id="save-profile">Save Changes ✨</button>
+            </form>
+        </div>
+
+        <div>
+            <div class="glass-card" style="margin-bottom: var(--space-lg);">
+                <h2 class="section-title">👤 Account Info</h2>
+                <div style="margin-bottom: var(--space-md);">
+                    <div class="form-label">Username</div>
+                    <div style="font-size: 1.1rem; font-weight: 600;">{{ user.username }}</div>
+                </div>
+                <div style="margin-bottom: var(--space-md);">
+                    <div class="form-label">Email</div>
+                    <div>{{ user.email }}</div>
+                </div>
+                <div>
+                    <div class="form-label">Member Since</div>
+                    <div>{{ user.date_joined|date:"F j, Y" }}</div>
+                </div>
+            </div>
+
+            {% if profile.days_until_exam is not None %}
+            <div class="glass-card-gradient" style="text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: var(--space-sm);">⏰</div>
+                <div style="font-size: 2.5rem; font-weight: 800; background: var(--gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ profile.days_until_exam }}
+                </div>
+                <div style="color: var(--text-secondary);">days until your exam</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl);">
+        <div>
+            <h1 class="page-title">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+            <p class="page-subtitle">
+                {% if profile.days_until_exam is not None %}
+                    {{ profile.days_until_exam }} days until {{ profile.get_exam_type_display }} — You've got this! 💪
+                {% else %}
+                    How are you feeling today?
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'journal:new_entry' %}" class="btn btn-primary" id="btn-new-journal">
+            ✏️ Write Journal
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card purple fade-in stagger-1">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">{{ total_entries }}</div>
+            <div class="stat-label">Journal Entries</div>
+        </div>
+        <div class="stat-card cyan fade-in stagger-2">
+            <div class="stat-icon">{{ avg_mood|default:'—' }}</div>
+            <div class="stat-value">{% if avg_mood %}{{ avg_mood }}/10{% else %}—{% endif %}</div>
+            <div class="stat-label">Average Mood</div>
+        </div>
+        <div class="stat-card green fade-in stagger-3">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value">{{ streak }}</div>
+            <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat-card orange fade-in stagger-4">
+            <div class="stat-icon">⏰</div>
+            <div class="stat-value">{% if profile.days_until_exam is not None %}{{ profile.days_until_exam }}{% else %}—{% endif %}</div>
+            <div class="stat-label">Days to Exam</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Mood Chart -->
+        <div class="glass-card">
+            <h2 class="section-title">📈 Mood Trend</h2>
+            {% if mood_data != '[]' %}
+            <div class="chart-container">
+                <canvas id="moodChart"></canvas>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: var(--space-2xl); color: var(--text-tertiary);">
+                <div style="font-size: 3rem; margin-bottom: var(--space-md);">📊</div>
+                <p>Start journaling to see your mood trends!</p>
+                <a href="{% url 'journal:new_entry' %}" class="btn btn-primary btn-sm" style="margin-top: var(--space-md);">Write First Entry</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Mood Check-in -->
+        <div class="glass-card">
+            <h2 class="section-title">🎯 Quick Mood Check-in</h2>
+            <div class="mood-slider-container">
+                <input type="range" min="1" max="10" value="5" class="mood-slider" id="quick-mood-slider"
+                       aria-label="Mood score" aria-valuemin="1" aria-valuemax="10">
+                <div class="mood-display">
+                    <span class="mood-emoji" id="quick-mood-emoji">🙂</span>
+                    <span class="mood-text" id="quick-mood-text">Decent</span>
+                </div>
+            </div>
+
+            <div style="margin-top: var(--space-md);">
+                <label class="form-label" for="quick-mood-note">Quick note (optional)</label>
+                <input type="text" class="form-input" id="quick-mood-note" placeholder="How are you feeling right now?">
+            </div>
+
+            <button class="btn btn-success" style="width: 100%; margin-top: var(--space-md);" onclick="logQuickMood()" id="btn-log-mood">
+                Log Mood 🎯
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Entries & AI Insights -->
+    <div class="grid-2" style="margin-top: var(--space-xl);">
+        <!-- Recent Entries -->
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                <h2 class="section-title" style="margin-bottom: 0;">📚 Recent Entries</h2>
+                <a href="{% url 'journal:history' %}" class="btn btn-ghost btn-sm">View All →</a>
+            </div>
+
+            {% if recent_entries %}
+                {% for entry in recent_entries %}
+                <a href="{% url 'journal:entry_detail' entry.pk %}" class="entry-card" id="entry-{{ entry.pk }}">
+                    <div class="entry-header">
+                        <span class="entry-date">{{ entry.created_at|date:"M d, Y • h:i A" }}</span>
+                        <span class="entry-mood">{{ entry.mood_emoji }} {{ entry.mood_score }}/10</span>
+                    </div>
+                    <div class="entry-preview">{{ entry.content|truncatewords:25 }}</div>
+                    {% if entry.is_analyzed %}
+                    <div style="margin-top: var(--space-sm);">
+                        <span class="badge badge-purple">AI Analyzed ✨</span>
+                        {% if entry.burnout_risk is not None %}
+                        <span class="badge {% if entry.burnout_risk < 0.3 %}badge-green{% elif entry.burnout_risk < 0.6 %}badge-orange{% else %}badge-red{% endif %}">
+                            Burnout: {{ entry.burnout_level }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: var(--space-xl); color: var(--text-tertiary);">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-md);">📝</div>
+                    <p>No journal entries yet. Start writing to track your wellness!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Latest AI Insights -->
+        <div class="glass-card">
+            <h2 class="section-title">🤖 Latest AI Insights</h2>
+            {% if latest_analyzed %}
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Emotional Summary</div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ latest_analyzed.ai_summary }}</p>
+                </div>
+
+                {% if latest_analyzed.burnout_risk is not None %}
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Burnout Risk</div>
+                    <div class="burnout-meter">
+                        <div class="burnout-fill {% if latest_analyzed.burnout_risk < 0.3 %}low{% elif latest_analyzed.burnout_risk < 0.6 %}moderate{% else %}high{% endif %}"
+                             style="width: {{ latest_analyzed.burnout_risk|floatformat:0 }}%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary);">
+                        <span>Low</span>
+                        <span>{{ latest_analyzed.burnout_level }}</span>
+                        <span>Critical</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if latest_analyzed.encouragement %}
+                <div class="glass-card-gradient" style="padding: var(--space-lg);">
+                    <div style="font-size: 1.2rem; margin-bottom: var(--space-sm);">💝</div>
+                    <p style="font-style: italic; color: var(--text-secondary); font-size: 0.9rem;">
+                        {{ latest_analyzed.encouragement }}
+                    </p>
+                </div>
+                {% endif %}
+            {% else %}
+                <div style="text-align: center; padding: var(--space-xl); color: var(--text-tertiary);">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-md);">🤖</div>
+                    <p>Write a journal entry to get AI-powered insights about your mental wellness!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mood Slider
+    const moodEmojis = {
+        1: '😢', 2: '😟', 3: '😕', 4: '😐', 5: '🙂',
+        6: '😊', 7: '😄', 8: '🤩', 9: '🌟', 10: '🔥'
+    };
+    const moodTexts = {
+        1: 'Terrible', 2: 'Bad', 3: 'Not Great', 4: 'Okay', 5: 'Decent',
+        6: 'Good', 7: 'Great', 8: 'Amazing', 9: 'Fantastic', 10: 'On Fire!'
+    };
+
+    const slider = document.getElementById('quick-mood-slider');
+    const emojiEl = document.getElementById('quick-mood-emoji');
+    const textEl = document.getElementById('quick-mood-text');
+
+    if (slider) {
+        slider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            emojiEl.textContent = moodEmojis[val];
+            textEl.textContent = moodTexts[val];
+            emojiEl.classList.add('bounce');
+            setTimeout(() => emojiEl.classList.remove('bounce'), 500);
+        });
+    }
+
+    // Quick Mood Log
+    async function logQuickMood() {
+        const moodScore = document.getElementById('quick-mood-slider').value;
+        const note = document.getElementById('quick-mood-note').value;
+
+        try {
+            const response = await fetch('{% url "journal:quick_mood_log" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    mood_score: moodScore,
+                    energy_level: 5,
+                    anxiety_level: 5,
+                    motivation_level: 5,
+                    quick_note: note,
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast('Mood logged! ' + moodEmojis[moodScore], 'success');
+                document.getElementById('quick-mood-note').value = '';
+            }
+        } catch (err) {
+            showToast('Failed to log mood. Try again!', 'danger');
+        }
+    }
+
+    function showToast(message, type) {
+        const container = document.getElementById('toast-container') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = `toast alert-${type}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Mood Chart
+    const moodData = {{ mood_data|safe }};
+    const moodDates = {{ mood_dates|safe }};
+
+    if (moodData.length > 0) {
+        const ctx = document.getElementById('moodChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: moodDates,
+                datasets: [{
+                    label: 'Mood Score',
+                    data: moodData,
+                    borderColor: '#7c3aed',
+                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#7c3aed',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 15, 26, 0.9)',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(124, 58, 237, 0.3)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12,
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0, max: 10,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b', stepSize: 2 },
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', maxRotation: 45 },
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

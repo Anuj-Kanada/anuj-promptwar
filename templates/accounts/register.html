@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card" style="max-width: 500px;">
+        <div class="auth-header">
+            <div class="auth-logo">🧠</div>
+            <h1 class="auth-title">Join MindEase</h1>
+            <p class="auth-subtitle">Your AI-powered mental wellness companion for exam prep</p>
+        </div>
+
+        <form method="post" action="{% url 'accounts:register' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="id_first_name">First Name</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                <div class="form-error">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_username">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <div class="form-error">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_email">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <div class="form-error">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="id_exam_type">Exam Type</label>
+                    {{ form.exam_type }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_exam_date">Exam Date</label>
+                    {{ form.exam_date }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_password1">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                <div class="form-error">{{ form.password1.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_password2">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                <div class="form-error">{{ form.password2.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="register-submit">
+                Start Your Journey 🚀
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

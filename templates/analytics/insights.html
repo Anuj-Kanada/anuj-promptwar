@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Weekly Insights{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">🧠 Weekly Insights</h1>
+    <p class="page-subtitle">AI-generated weekly wellness reports based on your journal patterns</p>
+
+    {% if latest %}
+    <div class="glass-card-gradient" style="margin-bottom: var(--space-xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+            <h2 class="section-title" style="margin-bottom: 0;">Latest Report</h2>
+            <span class="badge badge-purple">{{ latest.week_start|date:"M d" }} — {{ latest.week_end|date:"M d, Y" }}</span>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: var(--space-lg);">
+            <div class="stat-card purple">
+                <div class="stat-value">{% if latest.avg_mood %}{{ latest.avg_mood|floatformat:1 }}{% else %}—{% endif %}</div>
+                <div class="stat-label">Avg Mood</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-value">{{ latest.total_entries }}</div>
+                <div class="stat-label">Entries</div>
+            </div>
+        </div>
+
+        {% if latest.ai_summary %}
+        <div style="margin-bottom: var(--space-lg);">
+            <div class="form-label">AI Summary</div>
+            <p style="color: var(--text-secondary); line-height: 1.7;">{{ latest.ai_summary }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if reports %}
+        <h2 class="section-title">📋 Past Reports</h2>
+        {% for report in reports %}
+        <div class="entry-card">
+            <div class="entry-header">
+                <span class="entry-date">{{ report.week_start|date:"M d" }} — {{ report.week_end|date:"M d, Y" }}</span>
+                <span class="badge badge-blue">{{ report.total_entries }} entries</span>
+            </div>
+            {% if report.ai_summary %}
+            <div class="entry-preview">{{ report.ai_summary|truncatewords:30 }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="glass-card" style="text-align: center; padding: var(--space-3xl);">
+            <div style="font-size: 4rem; margin-bottom: var(--space-lg);">📊</div>
+            <h2 style="color: var(--text-primary); margin-bottom: var(--space-sm);">No Reports Yet</h2>
+            <p style="color: var(--text-tertiary);">Keep journaling! Weekly reports are generated after your first full week of entries.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

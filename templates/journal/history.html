@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Journal History{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <div>
+            <h1 class="page-title">📚 Journal History</h1>
+            <p class="page-subtitle">Review your past entries and AI insights</p>
+        </div>
+        <a href="{% url 'journal:new_entry' %}" class="btn btn-primary">✏️ New Entry</a>
+    </div>
+
+    <!-- Filters -->
+    <div style="display: flex; gap: var(--space-sm); margin-bottom: var(--space-xl);">
+        <a href="?days=7" class="btn {% if date_filter == '7' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">7 Days</a>
+        <a href="?days=14" class="btn {% if date_filter == '14' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">14 Days</a>
+        <a href="?days=30" class="btn {% if date_filter == '30' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">30 Days</a>
+        <a href="?days=90" class="btn {% if date_filter == '90' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">90 Days</a>
+        <a href="?days=365" class="btn {% if date_filter == '365' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+    </div>
+
+    {% if entries %}
+        {% for entry in entries %}
+        <a href="{% url 'journal:entry_detail' entry.pk %}" class="entry-card fade-in" id="history-entry-{{ entry.pk }}">
+            <div class="entry-header">
+                <span class="entry-date">{{ entry.created_at|date:"l, M d, Y • h:i A" }}</span>
+                <span class="entry-mood" style="font-size: 1.1rem;">
+                    {{ entry.mood_emoji }}
+                    <strong>{{ entry.mood_score }}/10</strong>
+                </span>
+            </div>
+            <div class="entry-preview">{{ entry.content|truncatewords:40 }}</div>
+            <div style="margin-top: var(--space-sm); display: flex; gap: var(--space-xs); flex-wrap: wrap;">
+                {% if entry.is_analyzed %}
+                <span class="badge badge-purple">✨ AI Analyzed</span>
+                {% endif %}
+                {% if entry.dominant_emotion %}
+                <span class="badge badge-blue">{{ entry.dominant_emotion|title }}</span>
+                {% endif %}
+                {% if entry.burnout_risk is not None %}
+                <span class="badge {% if entry.burnout_risk < 0.3 %}badge-green{% elif entry.burnout_risk < 0.6 %}badge-orange{% else %}badge-red{% endif %}">
+                    Burnout: {{ entry.burnout_level }}
+                </span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="glass-card" style="text-align: center; padding: var(--space-3xl);">
+            <div style="font-size: 4rem; margin-bottom: var(--space-lg);">📝</div>
+            <h2 style="color: var(--text-primary); margin-bottom: var(--space-sm);">No Entries Yet</h2>
+            <p style="color: var(--text-tertiary); margin-bottom: var(--space-lg);">Start your wellness journey by writing your first journal entry</p>
+            <a href="{% url 'journal:new_entry' %}" class="btn btn-primary btn-lg">Write Your First Entry ✨</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

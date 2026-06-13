@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}New Journal Entry{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">📝 Write Your Journal</h1>
+    <p class="page-subtitle">Express your feelings — the AI will analyze your entry and provide personalized insights</p>
+
+    <form method="post" action="{% url 'journal:new_entry' %}" id="journal-form">
+        {% csrf_token %}
+
+        <div class="grid-2">
+            <!-- Journal Content -->
+            <div class="glass-card">
+                <h2 class="section-title">Your Thoughts</h2>
+                {{ form.content }}
+                {% if form.content.errors %}
+                <div class="form-error">{{ form.content.errors.0 }}</div>
+                {% endif %}
+                <div style="text-align: right; margin-top: var(--space-xs);">
+                    <span class="form-help" id="char-count">0 characters</span>
+                </div>
+            </div>
+
+            <div>
+                <!-- Mood Selector -->
+                <div class="glass-card" style="margin-bottom: var(--space-lg);">
+                    <h2 class="section-title">How are you feeling?</h2>
+                    {{ form.mood_score }}
+                    <div class="mood-slider-container">
+                        <input type="range" min="1" max="10" value="5" class="mood-slider" id="mood-slider"
+                               aria-label="Mood score" aria-valuemin="1" aria-valuemax="10"
+                               aria-valuetext="Decent">
+                        <div class="mood-display">
+                            <span class="mood-emoji" id="mood-emoji">🙂</span>
+                            <span class="mood-text" id="mood-text">Decent</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emotion Tags -->
+                <div class="glass-card" style="margin-bottom: var(--space-lg);">
+                    <h2 class="section-title">Tag Your Emotions</h2>
+                    <div class="emotion-grid">
+                        {% for value, label in form.emotions_select.field.choices %}
+                        <label class="emotion-tag" id="emotion-tag-{{ value }}">
+                            <input type="checkbox" name="emotions_select" value="{{ value }}">
+                            {{ label }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="btn-submit-journal">
+                    Save & Analyze with AI ✨
+                </button>
+                <p class="form-help" style="text-align: center; margin-top: var(--space-sm);">
+                    Gemini AI will analyze your entry for emotional patterns, stress triggers, and personalized insights
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mood Slider
+    const moodEmojis = {
+        1: '😢', 2: '😟', 3: '😕', 4: '😐', 5: '🙂',
+        6: '😊', 7: '😄', 8: '🤩', 9: '🌟', 10: '🔥'
+    };
+    const moodTexts = {
+        1: 'Terrible', 2: 'Bad', 3: 'Not Great', 4: 'Okay', 5: 'Decent',
+        6: 'Good', 7: 'Great', 8: 'Amazing', 9: 'Fantastic', 10: 'On Fire!'
+    };
+
+    const slider = document.getElementById('mood-slider');
+    const hiddenInput = document.getElementById('id_mood_score');
+    const emojiEl = document.getElementById('mood-emoji');
+    const textEl = document.getElementById('mood-text');
+
+    slider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        hiddenInput.value = val;
+        emojiEl.textContent = moodEmojis[val];
+        textEl.textContent = moodTexts[val];
+        this.setAttribute('aria-valuetext', moodTexts[val]);
+        emojiEl.classList.add('bounce');
+        setTimeout(() => emojiEl.classList.remove('bounce'), 500);
+    });
+
+    // Sync initial value
+    hiddenInput.value = slider.value;
+
+    // Emotion tag toggle
+    document.querySelectorAll('.emotion-tag').forEach(tag => {
+        tag.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+            }
+            this.classList.toggle('selected', this.querySelector('input').checked);
+        });
+    });
+
+    // Character count
+    const textarea = document.getElementById('id_journal_content');
+    const charCount = document.getElementById('char-count');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            charCount.textContent = this.value.length + ' characters';
+        });
+    }
+
+    // Loading state on submit
+    document.getElementById('journal-form').addEventListener('submit', function() {
+        const btn = document.getElementById('btn-submit-journal');
+        btn.innerHTML = '<span class="typing-dots" style="display:flex;"><span></span><span></span><span></span></span> Analyzing with AI...';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

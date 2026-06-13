@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Mindfulness Exercises{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">🧘 Mindfulness Exercises</h1>
+    <p class="page-subtitle">Quick exercises to help you de-stress and refocus</p>
+
+    <!-- Built-in Breathing Exercise -->
+    <div class="glass-card-gradient" style="margin-bottom: var(--space-xl); text-align: center;">
+        <h2 class="section-title">🌬️ Quick Breathing Exercise</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Follow the circle: breathe in as it grows, breathe out as it shrinks</p>
+
+        <div style="display: flex; justify-content: center; margin-bottom: var(--space-lg);">
+            <div id="breathing-circle" style="
+                width: 120px; height: 120px;
+                border-radius: 50%;
+                background: var(--gradient-primary);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1rem; color: white; font-weight: 600;
+                transition: all 4s ease-in-out;
+                box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+            ">
+                <span id="breath-text">Start</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-sm); justify-content: center;">
+            <button class="btn btn-primary" onclick="startBreathing('478')" id="btn-478">4-7-8 Technique</button>
+            <button class="btn btn-secondary" onclick="startBreathing('box')" id="btn-box">Box Breathing</button>
+            <button class="btn btn-ghost" onclick="stopBreathing()" id="btn-stop-breathing">Stop</button>
+        </div>
+    </div>
+
+    <!-- 5-4-3-2-1 Grounding -->
+    <div class="glass-card" style="margin-bottom: var(--space-xl);">
+        <h2 class="section-title">🌍 5-4-3-2-1 Grounding Technique</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">When anxiety strikes, ground yourself by engaging your senses:</p>
+
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="stat-card purple">
+                <div class="stat-icon">👁️</div>
+                <div class="stat-value" style="font-size: 1.5rem;">5 Things</div>
+                <div class="stat-label">You can SEE</div>
+            </div>
+            <div class="stat-card cyan">
+                <div class="stat-icon">✋</div>
+                <div class="stat-value" style="font-size: 1.5rem;">4 Things</div>
+                <div class="stat-label">You can TOUCH</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon">👂</div>
+                <div class="stat-value" style="font-size: 1.5rem;">3 Things</div>
+                <div class="stat-label">You can HEAR</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-icon">👃</div>
+                <div class="stat-value" style="font-size: 1.5rem;">2 Things</div>
+                <div class="stat-label">You can SMELL</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon">👅</div>
+                <div class="stat-value" style="font-size: 1.5rem;">1 Thing</div>
+                <div class="stat-label">You can TASTE</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Exercises -->
+    <div class="glass-card">
+        <h2 class="section-title">⚡ Quick Stress Busters</h2>
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <div class="stat-card purple" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🧊</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Ice Cube Hold</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Hold an ice cube for 60 seconds. The cold sensation grounds you in the present moment.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">1 min</div>
+            </div>
+            <div class="stat-card cyan" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">💪</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Progressive Muscle Relaxation</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Tense each muscle group for 5 seconds, then release. Start from toes to head.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">5 min</div>
+            </div>
+            <div class="stat-card green" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🎵</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Humming Bee Breath</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Close your eyes, breathe in deeply, hum as you exhale. Repeat 5 times. The vibration calms your nervous system.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">3 min</div>
+            </div>
+            <div class="stat-card orange" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📝</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Worry Dump</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Write down everything worrying you for 3 minutes. Don't filter, just write. Then close the paper.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">3 min</div>
+            </div>
+            <div class="stat-card purple" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🚶</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Mindful Walk</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Take a 5-minute walk. Focus on each step, the feeling of ground beneath your feet.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">5 min</div>
+            </div>
+            <div class="stat-card cyan" style="cursor: default;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🙏</div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">Gratitude Flash</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Name 3 things you're grateful for right now. They can be tiny. This shifts your brain from threat to safety mode.</p>
+                <div class="badge badge-blue" style="margin-top: var(--space-sm);">1 min</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let breathingInterval = null;
+    const circle = document.getElementById('breathing-circle');
+    const breathText = document.getElementById('breath-text');
+
+    function startBreathing(type) {
+        stopBreathing();
+
+        let phases;
+        if (type === '478') {
+            phases = [
+                { text: 'Breathe In', duration: 4000, scale: 1.8 },
+                { text: 'Hold', duration: 7000, scale: 1.8 },
+                { text: 'Breathe Out', duration: 8000, scale: 1 },
+            ];
+        } else {
+            phases = [
+                { text: 'Breathe In', duration: 4000, scale: 1.8 },
+                { text: 'Hold', duration: 4000, scale: 1.8 },
+                { text: 'Breathe Out', duration: 4000, scale: 1 },
+                { text: 'Hold', duration: 4000, scale: 1 },
+            ];
+        }
+
+        let phaseIndex = 0;
+
+        function nextPhase() {
+            const phase = phases[phaseIndex % phases.length];
+            breathText.textContent = phase.text;
+            circle.style.transform = `scale(${phase.scale})`;
+            circle.style.boxShadow = phase.scale > 1
+                ? '0 0 60px rgba(124, 58, 237, 0.5)'
+                : '0 0 30px rgba(124, 58, 237, 0.3)';
+            circle.style.transition = `all ${phase.duration}ms ease-in-out`;
+            phaseIndex++;
+            breathingInterval = setTimeout(nextPhase, phase.duration);
+        }
+
+        nextPhase();
+    }
+
+    function stopBreathing() {
+        if (breathingInterval) {
+            clearTimeout(breathingInterval);
+            breathingInterval = null;
+        }
+        circle.style.transform = 'scale(1)';
+        circle.style.transition = 'all 0.5s ease';
+        circle.style.boxShadow = '0 0 30px rgba(124, 58, 237, 0.3)';
+        breathText.textContent = 'Start';
+    }
+</script>
+{% endblock %}

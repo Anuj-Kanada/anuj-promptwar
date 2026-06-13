@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Wellness Alerts{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 class="page-title">🔔 Wellness Alerts</h1>
+    <p class="page-subtitle">{{ unread_count }} unread alert{{ unread_count|pluralize }}</p>
+
+    {% if alerts %}
+        {% for alert in alerts %}
+        <div class="entry-card {% if not alert.is_read %}{% endif %}" id="alert-{{ alert.pk }}"
+             style="{% if not alert.is_read %}border-left: 3px solid {% if alert.severity == 'critical' %}var(--accent-danger){% elif alert.severity == 'warning' %}var(--accent-warning){% elif alert.severity == 'positive' %}var(--accent-success){% else %}var(--accent-info){% endif %}{% endif %}">
+            <div class="entry-header">
+                <span style="font-size: 1.2rem;">{{ alert.icon }}</span>
+                <span class="badge badge-{% if alert.severity == 'critical' %}red{% elif alert.severity == 'warning' %}orange{% elif alert.severity == 'positive' %}green{% else %}blue{% endif %}">
+                    {{ alert.get_severity_display }}
+                </span>
+            </div>
+            <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">{{ alert.title }}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ alert.message }}</p>
+            {% if alert.recommended_action %}
+            <div style="margin-top: var(--space-sm); padding: var(--space-sm) var(--space-md); background: var(--bg-glass-hover); border-radius: var(--radius-sm);">
+                <strong style="font-size: 0.8rem;">💡 Recommended:</strong>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">{{ alert.recommended_action }}</span>
+            </div>
+            {% endif %}
+            <div class="entry-date" style="margin-top: var(--space-sm);">{{ alert.created_at|date:"M d, Y • h:i A" }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="glass-card" style="text-align: center; padding: var(--space-3xl);">
+            <div style="font-size: 4rem; margin-bottom: var(--space-lg);">🔔</div>
+            <h2 style="color: var(--text-primary); margin-bottom: var(--space-sm);">No Alerts</h2>
+            <p style="color: var(--text-tertiary);">Keep journaling and the AI will generate wellness alerts based on your patterns!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Journal Entry{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <div>
+            <h1 class="page-title">{{ entry.mood_emoji }} Journal Entry</h1>
+            <p class="page-subtitle">{{ entry.created_at|date:"l, F j, Y • h:i A" }}</p>
+        </div>
+        <a href="{% url 'journal:history' %}" class="btn btn-secondary">← Back to History</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Journal Content -->
+        <div>
+            <div class="glass-card" style="margin-bottom: var(--space-lg);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                    <h2 class="section-title" style="margin-bottom: 0;">Your Entry</h2>
+                    <div class="entry-mood" style="font-size: 1.2rem;">
+                        {{ entry.mood_emoji }} <span style="font-weight: 700;">{{ entry.mood_score }}/10</span>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); line-height: 1.8; white-space: pre-wrap;">{{ entry.content }}</p>
+
+                {% if entry.emotion_list %}
+                <div style="margin-top: var(--space-lg); display: flex; flex-wrap: wrap; gap: var(--space-xs);">
+                    {% for emotion in entry.emotion_list %}
+                    <span class="badge badge-purple">{{ emotion }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Coping Suggestions -->
+            {% if coping_suggestions %}
+            <div class="glass-card">
+                <h2 class="section-title">💡 Coping Strategies</h2>
+                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                    {% for suggestion in coping_suggestions %}
+                    <div style="display: flex; gap: var(--space-md); align-items: flex-start; padding: var(--space-md); background: var(--bg-glass-hover); border-radius: var(--radius-md);">
+                        <span style="font-size: 1.2rem; flex-shrink: 0;">{{ forloop.counter }}.</span>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ suggestion }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Analysis -->
+        <div>
+            {% if entry.is_analyzed %}
+            <div class="glass-card-gradient" style="margin-bottom: var(--space-lg);">
+                <h2 class="section-title">🤖 AI Analysis</h2>
+
+                <!-- Emotional Summary -->
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Emotional Summary</div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ entry.ai_summary }}</p>
+                </div>
+
+                <!-- Dominant Emotion -->
+                {% if entry.dominant_emotion %}
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Dominant Emotion</div>
+                    <span class="badge badge-purple" style="font-size: 0.85rem; padding: 0.3rem 0.8rem;">
+                        {{ entry.dominant_emotion|title }}
+                    </span>
+                </div>
+                {% endif %}
+
+                <!-- Sentiment Score -->
+                {% if entry.sentiment_score is not None %}
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Sentiment Score</div>
+                    <div class="burnout-meter" style="height: 10px;">
+                        <div class="burnout-fill {% if entry.sentiment_score > 0.6 %}low{% elif entry.sentiment_score > 0.3 %}moderate{% else %}high{% endif %}"
+                             style="width: {% widthratio entry.sentiment_score 1 100 %}%;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary);">
+                        <span>Negative</span>
+                        <span>{% widthratio entry.sentiment_score 1 100 %}%</span>
+                        <span>Positive</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Burnout Risk -->
+                {% if entry.burnout_risk is not None %}
+                <div style="margin-bottom: var(--space-lg);">
+                    <div class="form-label">Burnout Risk Level</div>
+                    <div class="burnout-meter" style="height: 10px;">
+                        <div class="burnout-fill {% if entry.burnout_risk < 0.3 %}low{% elif entry.burnout_risk < 0.6 %}moderate{% else %}high{% endif %}"
+                             style="width: {% widthratio entry.burnout_risk 1 100 %}%;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary);">
+                        <span>Low</span>
+                        <span class="badge {% if entry.burnout_risk < 0.3 %}badge-green{% elif entry.burnout_risk < 0.6 %}badge-orange{% else %}badge-red{% endif %}">
+                            {{ entry.burnout_level }}
+                        </span>
+                        <span>Critical</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Stress Triggers -->
+            {% if triggers %}
+            <div class="glass-card" style="margin-bottom: var(--space-lg);">
+                <h2 class="section-title">⚠️ Identified Stress Triggers</h2>
+                {% for trigger in triggers %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--glass-border);">
+                    <div>
+                        <span class="badge {% if trigger.severity > 7 %}badge-red{% elif trigger.severity > 4 %}badge-orange{% else %}badge-blue{% endif %}">
+                            {{ trigger.get_trigger_type_display }}
+                        </span>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: var(--space-sm);">{{ trigger.trigger_detail }}</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: var(--text-tertiary);">{{ trigger.severity }}/10</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Encouragement -->
+            {% if entry.encouragement %}
+            <div class="glass-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">💝</div>
+                <h2 class="section-title">A Message For You</h2>
+                <p style="color: var(--text-secondary); font-style: italic; font-size: 0.95rem; line-height: 1.7;">
+                    {{ entry.encouragement }}
+                </p>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="glass-card" style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: var(--space-md);">🤖</div>
+                <p style="color: var(--text-tertiary);">AI analysis not available for this entry.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
