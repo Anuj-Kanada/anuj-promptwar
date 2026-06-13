@@ -118,3 +118,39 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Gemini API Key
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+if not GEMINI_API_KEY:
+    import warnings
+    warnings.warn(
+        'GEMINI_API_KEY not set! AI features will use fallback responses. '
+        'Set it in your .env file.',
+        stacklevel=1
+    )
+
+# Session security
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'journal': {'handlers': ['console'], 'level': 'INFO'},
+        'chat': {'handlers': ['console'], 'level': 'INFO'},
+        'wellness': {'handlers': ['console'], 'level': 'INFO'},
+        'analytics': {'handlers': ['console'], 'level': 'INFO'},
+    },
+}

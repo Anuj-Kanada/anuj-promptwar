@@ -68,6 +68,10 @@ def send_chat_message(session, user_message, student_name, exam_type, exam_date,
     Send a message to the AI chat companion and get a response.
     """
     try:
+        if not settings.GEMINI_API_KEY:
+            logger.warning("GEMINI_API_KEY not configured — using fallback response")
+            return {'success': False, 'response': _get_fallback_response(user_message), 'error': 'API key not configured'}
+
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
         system_prompt = get_chat_system_prompt(

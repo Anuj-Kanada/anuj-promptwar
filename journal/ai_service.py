@@ -63,6 +63,10 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format, no markdown format
 }}"""
 
     try:
+        if not settings.GEMINI_API_KEY:
+            logger.warning("GEMINI_API_KEY not configured — using fallback analysis")
+            return {'success': False, 'error': 'API key not configured', 'data': _get_fallback_analysis()}
+
         client = get_gemini_client()
         response = client.models.generate_content(
             model='gemini-2.0-flash',
