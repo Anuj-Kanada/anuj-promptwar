@@ -7,8 +7,7 @@ Uses the new google.genai SDK.
 import logging
 from django.conf import settings
 
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -68,52 +67,51 @@ def send_chat_message(session, user_message, student_name, exam_type, exam_date,
     Send a message to the AI chat companion and get a response.
     """
     try:
-        if not settings.GEMINI_API_KEY:
-            logger.warning("GEMINI_API_KEY not configured — using fallback response")
+        if not settings.OPENROUTER_API_KEY:
+            logger.warning("OPENROUTER_API_KEY not configured — using fallback response")
             return {'success': False, 'response': _get_fallback_response(user_message), 'error': 'API key not configured'}
 
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=settings.OPENROUTER_API_KEY,
+        )
 
         system_prompt = get_chat_system_prompt(
             student_name, exam_type, exam_date, recent_mood, triggers
         )
 
         # Build conversation history (limit to last 20 messages to prevent token overflow)
-        contents = []
+        messages_payload = [
+            {"role": "system", "content": system_prompt}
+        ]
+        
         messages = session.messages.order_by('sent_at')
         recent_messages = list(messages)[-20:]
         
         for msg in recent_messages:
-            role = 'user' if msg.role == 'user' else 'model'
-            contents.append(
-                types.Content(
-                    role=role,
-                    parts=[types.Part.from_text(text=msg.content)]
-                )
-            )
+            role = 'user' if msg.role == 'user' else 'assistant'
+            messages_payload.append({
+                "role": role,
+                "content": msg.content
+            })
 
         # Add the current user message
-        contents.append(
-            types.Content(
-                role='user',
-                parts=[types.Part.from_text(text=user_message)]
-            )
-        )
+        messages_payload.append({
+            "role": "user",
+            "content": user_message
+        })
 
-        # Generate response with system instruction
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.8,
-                max_output_tokens=1024,
-            )
+        # Generate response
+        response = client.chat.completions.create(
+            model='google/gemini-2.0-flash-001',
+            messages=messages_payload,
+            temperature=0.8,
+            max_tokens=1024,
         )
 
         return {
             'success': True,
-            'response': response.text
+            'response': response.choices[0].message.content
         }
 
     except Exception as e:

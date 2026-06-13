@@ -130,11 +130,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STORAGES = {
-    'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
-    },
-}
 
 # Media files
 MEDIA_URL = '/media/'
@@ -147,12 +142,12 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/journal/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-# Gemini API Key
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-if not GEMINI_API_KEY:
+# OpenRouter API Key
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
+if not OPENROUTER_API_KEY:
     import warnings
     warnings.warn(
-        'GEMINI_API_KEY not set! AI features will use fallback responses. '
+        'OPENROUTER_API_KEY not set! AI features will use fallback responses. '
         'Set it in your .env file.',
         stacklevel=1
     )
@@ -169,6 +164,11 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    STORAGES = {
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
 # CSRF trusted origins for Render
 CSRF_TRUSTED_ORIGINS = []

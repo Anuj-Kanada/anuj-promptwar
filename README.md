@@ -22,7 +22,7 @@ Students preparing for high-stakes board exams and competitive entrance tests (N
 |-------|-----------|
 | Backend | Django 6.x (Python 3.12) |
 | Database | SQLite (dev) / MySQL (production) |
-| AI Engine | Google Gemini 2.0 Flash via `google-genai` SDK |
+| AI Engine | Google Gemini 2.0 Flash via OpenRouter (`openai` SDK) |
 | Frontend | Django Templates + Vanilla CSS + JavaScript |
 | Charts | Chart.js 4.x |
 | Design | Glassmorphism + Dark/Light Theme |
@@ -31,7 +31,7 @@ Students preparing for high-stakes board exams and competitive entrance tests (N
 
 ### Prerequisites
 - Python 3.10+
-- Google Gemini API Key ([Get one free](https://aistudio.google.com/apikey))
+- OpenRouter API Key ([Get one free](https://openrouter.ai/keys))
 
 ### Setup
 
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
+# Edit .env and add your OPENROUTER_API_KEY
 
 # Run migrations
 python manage.py makemigrations

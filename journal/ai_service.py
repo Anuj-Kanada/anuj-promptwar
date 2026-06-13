@@ -9,14 +9,17 @@ import json
 import logging
 from django.conf import settings
 
-from google import genai
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
 
-def get_gemini_client():
-    """Initialize and return the Gemini client."""
-    return genai.Client(api_key=settings.GEMINI_API_KEY)
+def get_openrouter_client():
+    """Initialize and return the OpenRouter client."""
+    return OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=settings.OPENROUTER_API_KEY,
+    )
 
 
 def analyze_journal_entry(entry_content, exam_type, exam_date, recent_moods=None):
@@ -63,18 +66,19 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format, no markdown format
 }}"""
 
     try:
-        if not settings.GEMINI_API_KEY:
-            logger.warning("GEMINI_API_KEY not configured — using fallback analysis")
+        if not settings.OPENROUTER_API_KEY:
+            logger.warning("OPENROUTER_API_KEY not configured — using fallback analysis")
             return {'success': False, 'error': 'API key not configured', 'data': _get_fallback_analysis()}
 
-        client = get_gemini_client()
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=prompt
+        client = get_openrouter_client()
+        response = client.chat.completions.create(
+            model='google/gemini-2.0-flash-001',
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
         )
         
         # Parse the response
-        response_text = response.text.strip()
+        response_text = response.choices[0].message.content.strip()
         # Remove markdown code blocks if present
         if response_text.startswith('```'):
             response_text = response_text.split('\n', 1)[1]
